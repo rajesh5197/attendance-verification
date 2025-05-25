@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Attendance Access Verification</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      text-align: center;
+      background-color: #f0f8ff;
+    }
+    #status {
+      margin-top: 2rem;
+      font-size: 1.2rem;
+    }
+  </style>
+</head>
+<body>
+  <h2>Student Attendance Verification</h2>
+  <p>Verifying your location, please wait...</p>
+  <div id="status"></div>
+
+  <script>
+    // College Coordinates (Sir MVIT)
+    const collegeLat = 13.151040487181069;
+    const collegeLon = 77.60744237489622;
+    const allowedDistanceKm = 10;
+    const formUrl = "https://forms.gle/uT8WoBNy9TAXDwLA6";
+
+    function getDistanceFromLatLonInKm(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Radius of the earth in km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+
+    function verifyLocation() {
+      if (!navigator.geolocation) {
+        document.getElementById('status').innerText = "Geolocation is not supported by your browser.";
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(success, error, { enableHighAccuracy: true });
+
+      function success(position) {
+        const userLat = position.coords.latitude;
+        const userLon = position.coords.longitude;
+
+        const distance = getDistanceFromLatLonInKm(userLat, userLon, collegeLat, collegeLon);
+
+        if (distance <= allowedDistanceKm) {
+          document.getElementById('status').innerText = "Location verified. Redirecting to the form...";
+          window.location.href = formUrl;
+        } else {
+          document.getElementById('status').innerText =
+            `Access Denied: You are ${distance.toFixed(2)} km away from the college.`;
+        }
+      }
+
+      function error(err) {
+        document.getElementById('status').innerText =
+          "Location access denied or unavailable. Please enable location services.";
+      }
+    }
+
+    // Start location check
+    verifyLocation();
+  </script>
+</body>
+</html>
